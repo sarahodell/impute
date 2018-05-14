@@ -7,14 +7,14 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE,eval=FALSE)
 ```
-#Imputation Using FILLIN
+# Imputation Using FILLIN
 
 Getting FILLIN up and running, and using the maize NAM founders to impute onto the NAM RILs
 which were genotyped using GBS (v2.7)
 
 User Manual on FILLIN Imputation tool: https://bitbucket.org/tasseladmin/tassel-5-source/wiki/UserManual/FILLIN/FILLIN
 
-###Getting Started
+### Getting Started
 Download TASSEL from: https://bitbucket.org/tasseladmin/tassel-5-source/wiki/Home
 (requires Java 8)
 ```{bash gettassel}
@@ -41,7 +41,7 @@ iget -K -P -T /iplant/home/shared/panzea/genotypes/GBS/v27/ZeaGBSv27_publicSampl
 iget -K -P -T /iplant/home/shared/panzea/hapmap3/hmp321/unimputed/c10_hmp321_withGL.vcf.gz
 ```
 
-###Filter GBS data
+### Filter GBS data
 Convert the GBS hdf5 file to hmp, and filter using the taxa list file 'NAM_RILS.json.gz' so we have only the ~5,000 RILS. We also use the HetsToUnknown Plugin to remove heterozygous calls. This will make imputation easier.
 
 ```{bash h5tovcf}
