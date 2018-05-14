@@ -25,7 +25,7 @@ The file 'RILS_10x10.txt' was generated using the code in SimulateRILs. It conta
 breakpoint information for 10 simulated RILs for chromosome 10. Using this file, we will
  generate a vcf file for the simulated RILs.
 
-###Preparing VCF Files
+### Preparing VCF Files
 The file c10_hmp31_edit_founders.vcf.gz should be indexed already. In this example, the RIL
 parents were B73 and Oh43, so we will make individual vcf files for both of them
 to make extracting variant information from both of them easier
