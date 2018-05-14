@@ -5,9 +5,9 @@ date: "5/14/2018"
 output: html_document
 ---
 
-#Impute Simulated RILs Using FILLIN
+# Impute Simulated RILs Using FILLIN
 
-###Getting Started
+### Getting Started
 Software Requirements:
 Tassel 5.0
 bcftools/1.2
@@ -40,7 +40,7 @@ done
 bcftools view -Oz -S parents.txt c10_hmp31_edit_founders.vcf.gz > RILparents_c10_hmp321.vcf.gz 
 ```
 
-###Building RIL VCF Files
+### Building RIL VCF Files
 The script build_ril.py takes the following arguments:
 
 ```{bash buildril}
@@ -69,7 +69,7 @@ done
 bcftools merge -l ril_names.txt -m all -Oz > B73xOh43_RILSimsAll_chr10.vcf.gz
 ```
 
-###Building RIL VCF Files with Missing Data
+### Building RIL VCF Files with Missing Data
 
 To generate a RIL file with 40% of data missing, use the options --drop True --droprate 0.4:
 
