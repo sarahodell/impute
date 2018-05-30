@@ -5,9 +5,9 @@ date: "5/14/2018"
 output: html_document
 ---
 
-#Impute Simulated RILs Using FILLIN
+# Impute Simulated RILs Using FILLIN
 
-###Getting Started
+### Getting Started
 Software Requirements:
 Tassel 5.0
 bcftools/1.2
@@ -25,7 +25,7 @@ The file 'RILS_10x10.txt' was generated using the code in SimulateRILs. It conta
 breakpoint information for 10 simulated RILs for chromosome 10. Using this file, we will
  generate a vcf file for the simulated RILs.
 
-###Preparing VCF Files
+### Preparing VCF Files
 The file c10_hmp31_edit_founders.vcf.gz should be indexed already. In this example, the RIL
 parents were B73 and Oh43, so we will make individual vcf files for both of them
 to make extracting variant information from both of them easier
@@ -40,7 +40,7 @@ done
 bcftools view -Oz -S parents.txt c10_hmp31_edit_founders.vcf.gz > RILparents_c10_hmp321.vcf.gz 
 ```
 
-###Building RIL VCF Files
+### Building RIL VCF Files
 The script build_ril.py takes the following arguments:
 
 ```{bash buildril}
@@ -69,7 +69,7 @@ done
 bcftools merge -l ril_names.txt -m all -Oz > B73xOh43_RILSimsAll_chr10.vcf.gz
 ```
 
-###Building RIL VCF Files with Missing Data
+### Building RIL VCF Files with Missing Data
 
 To generate a RIL file with 40% of data missing, use the options --drop True --droprate 0.4:
 
