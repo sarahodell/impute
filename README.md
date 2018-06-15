@@ -1,4 +1,4 @@
-# Simulate RILs
+# Imputation Validation Using Simulated Crosses
 
 Generate recombinant inbred lines (RILs) based off of the NAM maize population 
 (5 generations of selfing). Writes out into files for other building RIL vcf files or for 
