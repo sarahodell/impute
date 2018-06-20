@@ -3,7 +3,7 @@
 import pandas as pd
 import numpy as np
 import argparse
-import sys
+import os.path
 
 
 def arg_parse():
@@ -163,7 +163,29 @@ def make_outfile(ril,out):
         outfile.write(txt)
 
 
-
+def parse_founders(infile):
+    if os.path.is_file(infile):
+        founders = []
+        with open(infile,'r') as ffile:
+            for line in ffile:
+                founders.append(line[:-1])
+        return founders
+    else:
+        print("File {0} not found".format(infile))
         
 if __name__ == "__main__":
-    pass
+    args = arg_parse()
+    founders = parse_founders(args.f)
+    if args.t == 'magic':
+        pop = chrom_sim(founders)
+        lines = [make_magic(pop) for i in range(args.n)]
+        make_outfile(lines,'sim_output.txt')
+    elif args.t == 'ril':
+        if len(founders) == 2:
+            pop=chrom_sim(founders)
+            lines = crossover(1,pop)
+            make_outfile(lines,'sim_output.txt')
+        else:
+            print("For line type option 'ril', number of founders must be 2")
+    else:
+        print("{0} is not a valid line type. Please choose 'magic' or 'ril'".format(args.t))
