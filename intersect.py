@@ -26,12 +26,21 @@ def get_total(pred):
             l = line.split('\t')
             start = int(l[1])
             end = int(l[2])
-            total+=end-start
+            total+= end-start
     return total
 
 
+def percent_heterozygous(infile):
+    df = pd.read_table(infile)
+    fulltotal=sum(df['end']-df['start'])
+    hetdf = df[df['donor1'] != df['donor2']]
+    perc_het = sum(hetdf['end']-hetdf['start'])
+    return round(float(perc_het)/fulltotal,3),fulltotal
+
+
 def split_samples(infile,p=False,r=False):
-    df = pd.read_table(infile,sep='\t')
+    df = pd.read_table(infile)
+    df = df[df['donor1']==df['donor2']]
     if p==True:
         seg='B'
         outtag='_pred.bed'
@@ -40,23 +49,17 @@ def split_samples(infile,p=False,r=False):
         outtag='.bed'
     samples = df['sample'].unique()
     chroms = df['chr'].unique()
-    allp=list(df['donor1'])+list(df['donor2'])
-    parents=np.unique(allp)
+    parents=np.unique(df['donor1'])
     for i in samples:
         for c in chroms:
             count = 1
             txt=''
             locs = df[df['sample']==i]
             for index,row in locs.iterrows():
-                if row['donor1']==row['donor2']:
-                    start = row['start']
-                    end = row['end']
-                    txt+='{0}\t{1}\t{2}\t{3}\n'.format(c,start,end,row['donor1']+'_'+str(count)+seg)
-                    count+=1
-                else:
-                    for d in row['donor1'],row['donor2']:
-                        txt+='{0}\t{1}\t{2}\t{3}\n'.format(c,row['start'],row['end'],d+'_'+str(count)+seg)
-                        count+=1
+                start = row['start']
+                end = row['end']
+                txt+='{0}\t{1}\t{2}\t{3}\n'.format(c,start,end,row['donor1']+'_'+str(count)+seg)
+                count+=1
         with open('tmp/'+i+'_'+str(c)+outtag,'w') as outfile:
             outfile.write(txt)
     if r==True:
@@ -106,7 +109,9 @@ def format_out(all_samples,samples,chroms):
             for i in range(len(parents)):
                 tmp+='\t{0}:{1}'.format(parents[i],perc[i])
             txt+=tmp+'\n'
-    txt+='\nTotal Percentage Correct: {0}\n'.format(all_samples['total'])
+    txt+='\nTotal Percentage Correct: {0}\n'.format(all_samples['fulltotal'])
+    txt+='Percentage of Homozygous Calls Correct: {0}\n'.format(all_samples['homozygoustotal'])
+    txt+='Percentage of Heterozygous Calls: {0}\n'.format(all_samples['het'])
     return txt
 
 
@@ -128,7 +133,7 @@ def intersect(sample,c,parents):
             per_parent['perc_correct'].append(round(float(right)/p_total,3))
         else:
             print('Parent {0} not shared between actual and predicted in sample {1} chr {2}\n').format(p,sample,c)
-        return per_parent
+    return per_parent
 
 def main():
     args = arg_parse()
@@ -150,7 +155,9 @@ def main():
             r_right+=(all_samples[r][c]['right'])
             r_total+=(all_samples[r][c]['total'])
         all_samples[r]['total']=round(float(r_right)/r_total,3)
-    all_samples['total'] = round(float(pright)/ptotal,3)
+    all_samples['het'],fulltotal=percent_heterozygous(pred)
+    all_samples['fulltotal'] = round(float(pright)/fulltotal,3)
+    all_samples['homozygoustotal']=round(float(pright)/ptotal,3)
     output = format_out(all_samples,samples,chroms)
     with open('intersect_output.txt','w') as outfile:
         outfile.write(output)
