@@ -20,6 +20,7 @@ def arg_parse():
 
 
 def get_total(pred):
+    """Calculates the total number of base pairs that were predicted in a bedfile"""
     total=0
     with open(pred,'r') as full:
         for line in full:
@@ -31,6 +32,7 @@ def get_total(pred):
 
 
 def percent_heterozygous(infile):
+    """Calculates the percentage of heterozygous calls in a sample"""
     df = pd.read_table(infile)
     fulltotal=sum(df['end']-df['start'])
     hetdf = df[df['donor1'] != df['donor2']]
@@ -38,35 +40,55 @@ def percent_heterozygous(infile):
     return round(float(perc_het)/fulltotal,3),fulltotal
 
 
-def split_samples(infile,p=False,r=False):
+def split_actual(infile):
+    """Splits the Actual infile into separate files for each sample and chromosome
+    Returns the lists of sample names, unique parent names, and chromosomes"""
     df = pd.read_table(infile)
-    df = df[df['donor1']==df['donor2']]
-    if p==True:
-        seg='B'
-        outtag='_pred.bed'
-    else:
-        seg='A'
-        outtag='.bed'
-    samples = df['sample'].unique()
-    chroms = df['chr'].unique()
-    parents=np.unique(df['donor1'])
+    seg='A'
+    outtag='.bed'
+    samples=df['sample'].unique()
+    chroms=df['chr'].unique()
+    parents=df['donor1'].unique()
     for i in samples:
         for c in chroms:
-            count = 1
+            count=1
             txt=''
-            locs = df[df['sample']==i]
+            locs=df[df['sample']==i]
             for index,row in locs.iterrows():
                 start = row['start']
                 end = row['end']
                 txt+='{0}\t{1}\t{2}\t{3}\n'.format(c,start,end,row['donor1']+'_'+str(count)+seg)
                 count+=1
-        with open('tmp/'+i+'_'+str(c)+outtag,'w') as outfile:
-            outfile.write(txt)
-    if r==True:
-        return samples,chroms,parents
+            with open('tmp/'+i+'_'+str(c)+outtag,'w') as outfile:
+                outfile.write(txt)
+    return samples,chroms,parents
+
+
+def split_predicted(infile,samples,chroms):
+    """Splits the predicted infile into separate files for each sample and chromosome. If 
+    a heterozygous call, creates duplicate files for bot of the predicted donors"""
+    df = pd.read_table(infile)
+    seg='B'
+    outtag='_pred.bed'
+    for i in samples:
+        for c in chroms:
+            count=1
+            txt=''
+            locs=df[df['sample']==i]
+            for index,row in locs.iterrows():
+                start=row['start']
+                end=row['end']
+                txt+='{0}\t{1}\t{2}\t{3}\n'.format(c,start,end,row['donor1']+'_'+str(count)+seg)
+                if row['donor1']!=row['donor2']:
+                    txt+='{0}\t{1}\t{2}\t{3}\n'.format(c,start,end,row['donor2']+'_'+str(count)+seg)
+                count+=1
+            with open('tmp/'+i+'_'+str(c)+outtag,'w') as outfile:
+                outfile.write(txt)
 
     
 def split_parents(p,infile,outfile):
+    """Separates a file from split_samples (predicted or actual) into individual files by parent
+    if prediected file, checks if the parent is in the file. If not, it returns False, otherwise True"""
     txt=''
     hasparent=False
     with open(infile,'r') as full:
@@ -81,6 +103,8 @@ def split_parents(p,infile,outfile):
 
         
 def call_bedtools(afile,bfile):
+    """System calls bedtools, which calculates the interection between afile and bfile. The two files
+    should be from the same parent"""
     process = Popen(['bedtools','intersect','-wao','-a',afile,'-b',bfile],stdout=PIPE,stderr=STDOUT)
     stdout,stderr = process.communicate()
     print(stderr)
@@ -88,6 +112,8 @@ def call_bedtools(afile,bfile):
 
 
 def get_overlap(stdout):
+    """Takes in the output of call_bedtools and returns the total overlap between predicted and actual
+    parental regions"""
     overlap=[]
     lines = stdout.split('\n')
     for l in lines[:-1]:
@@ -98,6 +124,8 @@ def get_overlap(stdout):
 
 
 def format_out(all_samples,samples,chroms):
+    """Takes in the dictionary all_samples and formats the data for output in the intersect_output.txt
+    file."""
     txt="Line\tTotal % Correct\tChrom\t% per Parent\n"
     for r in samples:
         total=all_samples[r]['total']
@@ -116,8 +144,10 @@ def format_out(all_samples,samples,chroms):
 
 
 def intersect(sample,c,parents):
+    """Calculates the percentage correctly assigned in a sample per parent and in total""" 
     r_actual = 'tmp/{0}_{1}.bed'.format(sample,c)
     r_pred='tmp/{0}_{1}_pred.bed'.format(sample,c)
+    r_pred_all='tmp/{0}_{1}_pred_all.bed'.format(sample,c)
     total=get_total(r_pred)
     per_parent={"parent":[],"perc_correct":[],"right":0,"total":0}
     per_parent['total']=total
@@ -132,6 +162,8 @@ def intersect(sample,c,parents):
             per_parent['right']+=right
             per_parent['perc_correct'].append(round(float(right)/p_total,3))
         else:
+            per_parent['parent'].append(p)
+            per_parent['perc_correct'].append(0)
             print('Parent {0} not shared between actual and predicted in sample {1} chr {2}\n').format(p,sample,c)
     return per_parent
 
@@ -139,8 +171,8 @@ def main():
     args = arg_parse()
     actual = args.actual
     pred = args.pred
-    samples,chroms,parents=split_samples(actual,r=True)
-    split_samples(pred,p=True)
+    samples,chroms,parents=split_actual(actual)
+    split_predicted(pred,samples,chroms)
     all_samples= {}
     pright=0
     ptotal=0
