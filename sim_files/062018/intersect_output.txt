@@ -1,0 +1,15 @@
+Line	Total % Correct	Chrom	% per Parent
+M1	0.85	10	VA85:1.0	DK63:0.997	F492:0.988	D105_inra:0.837	B73_inra:0.917	W117_inra:0	A632_usa:0	ND245:0	B96:0	EP1_inra:0	OH43_inra:0	A654_inra:0	FV252_inra:0	C103_inra:0	FV2_inra:0	CO255_inra:0
+M2	0.825	10	VA85:0	DK63:0.699	F492:0.995	D105_inra:0.912	B73_inra:0	W117_inra:0.995	A632_usa:0.8	ND245:0.954	B96:0	EP1_inra:0	OH43_inra:0	A654_inra:0	FV252_inra:0	C103_inra:0	FV2_inra:0	CO255_inra:0
+M3	0.723	10	VA85:0.835	DK63:0.966	F492:0.988	D105_inra:0.916	B73_inra:0.973	W117_inra:0.999	A632_usa:0	ND245:0	B96:1.0	EP1_inra:0	OH43_inra:0	A654_inra:0	FV252_inra:0	C103_inra:0	FV2_inra:0	CO255_inra:0
+M4	0.848	10	VA85:0	DK63:0	F492:0	D105_inra:0	B73_inra:0	W117_inra:1.0	A632_usa:0.087	ND245:0	B96:0.995	EP1_inra:0.998	OH43_inra:1.0	A654_inra:0.919	FV252_inra:0.818	C103_inra:0	FV2_inra:0	CO255_inra:0
+M5	0.68	10	VA85:0.847	DK63:0	F492:0	D105_inra:0.997	B73_inra:0	W117_inra:0.987	A632_usa:0	ND245:0	B96:0	EP1_inra:0.977	OH43_inra:0	A654_inra:1.0	FV252_inra:0.386	C103_inra:0.952	FV2_inra:0	CO255_inra:0
+M6	0.528	10	VA85:0.909	DK63:0	F492:0.97	D105_inra:0	B73_inra:0.943	W117_inra:0.998	A632_usa:0	ND245:0	B96:0	EP1_inra:1.0	OH43_inra:0.65	A654_inra:0	FV252_inra:0	C103_inra:1.0	FV2_inra:0.782	CO255_inra:0
+M7	0.852	10	VA85:0	DK63:0	F492:0	D105_inra:0	B73_inra:0	W117_inra:0	A632_usa:0	ND245:0.999	B96:0.997	EP1_inra:0	OH43_inra:0.968	A654_inra:0	FV252_inra:0	C103_inra:0	FV2_inra:0.962	CO255_inra:0
+M8	0.476	10	VA85:1.0	DK63:0	F492:0.886	D105_inra:0	B73_inra:1.0	W117_inra:0.957	A632_usa:0.042	ND245:0.991	B96:0	EP1_inra:0	OH43_inra:0.79	A654_inra:0.409	FV252_inra:0	C103_inra:0	FV2_inra:0.928	CO255_inra:0.805
+M9	0.681	10	VA85:0.99	DK63:0	F492:0	D105_inra:0	B73_inra:0	W117_inra:0	A632_usa:0.036	ND245:1.0	B96:0	EP1_inra:0	OH43_inra:0.882	A654_inra:0	FV252_inra:0	C103_inra:0.955	FV2_inra:0.912	CO255_inra:0.882
+M10	0.861	10	VA85:0	DK63:0	F492:0	D105_inra:0	B73_inra:0	W117_inra:0	A632_usa:0.842	ND245:0.863	B96:0.991	EP1_inra:0	OH43_inra:0.986	A654_inra:0	FV252_inra:0	C103_inra:0	FV2_inra:0	CO255_inra:0
+
+Total Percentage Correct: 0.919
+Percentage of Homozygous Calls Correct: 0.715
+Percentage of Heterozygous Calls: 0.284

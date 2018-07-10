@@ -6,11 +6,16 @@ import argparse
 def parse_args():
     """ -h for info on arguments
     """
+<<<<<<< HEAD
     parser = argparse.ArgumentParser(description="""Program description:
                                      Takes a vcf file and converts it to a csv format with founder as columns and marker genotypes as rows
                                      with nucleotide information in IUPAC format.
                                      This csv file is formatted for use with R/qtl2
                                      """)
+=======
+    parser = argparse.ArgumentParser(description="""Program description: Takes a vcf file and converts it to a csv format with founder rows and marker genotypes as columns. Genotypes are assumed homozygous, with reference allele as A and alternate alleles as B.                                                             
+This csv file is formatted for use with R/qtl2""")
+>>>>>>> 461ea4af76df207712b0fb3aabdea80831872a58
     parser.add_argument("infile",type=str,help="""The input vcf file""")
     parser.add_argument("outfile",type=str,help="""The output csv filename""")
     args=parser.parse_args()

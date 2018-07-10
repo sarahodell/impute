@@ -14,7 +14,9 @@ import argparse
 def parse_args():
     """ -h for info on arguments
     """
-    parser = argparse.ArgumentParser(description="""Program description""")
+    parser = argparse.ArgumentParser(description="""Program description: Takes a vcf file and converts it to a csv format with markers as columns and samples as rows             
+with nucleotide information in IUPAC format.                                                             
+This csv file is formatted for use with R/qtl2""")
     parser.add_argument("infile",type=str,help="""The input vcf file""")
     parser.add_argument("outfile",type=str,help="""The output csv filename""")
     args=parser.parse_args()

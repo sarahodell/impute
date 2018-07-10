@@ -46,14 +46,14 @@ def split_actual(infile):
     df = pd.read_table(infile)
     seg='A'
     outtag='.bed'
-    samples=df['sample'].unique()
-    chroms=df['chr'].unique()
+    samples=df.iloc[:,0].unique()
+    chroms=df.iloc[:,1].unique()
     parents=df['donor1'].unique()
     for i in samples:
         for c in chroms:
             count=1
             txt=''
-            locs=df[df['sample']==i]
+            locs=df[df.iloc[:,0]==i]
             for index,row in locs.iterrows():
                 start = row['start']
                 end = row['end']
@@ -196,4 +196,5 @@ def main():
 
 
 if __name__ == "__main__":
+    process = Popen(['mkdir','tmp'],stdout=PIPE,stderr=PIPE)
     main()
