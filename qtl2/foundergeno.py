@@ -1,11 +1,5 @@
 #!/usr/bin/env python
 
-"""
-Takes a vcf file and converts it to a csv format with founder as columns and marker genotypes as rows
-with nucleotide information in IUPAC format.
-This csv file is formatted for use with R/qtl2
-"""
-
 import sys
 import argparse
 
