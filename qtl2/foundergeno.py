@@ -6,18 +6,14 @@ import argparse
 def parse_args():
     """ -h for info on arguments
     """
-<<<<<<< HEAD
     parser = argparse.ArgumentParser(description="""Program description:
-                                     Takes a vcf file and converts it to a csv format with founder as columns and marker genotypes as rows
-                                     with nucleotide information in IUPAC format.
+                                     Takes a vcf file and converts it to a csv format with founder as rows and marker genotypes as columns
+                                     with nucleotide information encoded as A for reference allele and B for alternate alleles.
                                      This csv file is formatted for use with R/qtl2
                                      """)
-=======
-    parser = argparse.ArgumentParser(description="""Program description: Takes a vcf file and converts it to a csv format with founder rows and marker genotypes as columns. Genotypes are assumed homozygous, with reference allele as A and alternate alleles as B.                                                             
-This csv file is formatted for use with R/qtl2""")
->>>>>>> 461ea4af76df207712b0fb3aabdea80831872a58
     parser.add_argument("infile",type=str,help="""The input vcf file""")
     parser.add_argument("outfile",type=str,help="""The output csv filename""")
+    parser.add_argument("founders",type=str,help="""File with a list of founders in the order they are listed in the vcf file""")
     args=parser.parse_args()
     return args
 
@@ -25,10 +21,13 @@ This csv file is formatted for use with R/qtl2""")
 def get_foundergenofile():
     args=parse_args()
     txt='ind'
-    samples={0:'A',1:'B',2:'C',3:'D',4:'E',5:'F',6:'G',7:'H',8:'I',9:'J',10:'K',11:'L',12:'M',13:'N',14:'O',14:'P'}
-    index=0
+    samples={}
+    key=0
+    with open(args.founders,'r') as ffile:
+        for line in ffile:
+            samples[key]=line[:-1]
+            key+=1
     with open(args.infile,'r') as infile:
-        tmp=''
         for line in infile:
             info = line.split(',')
             marker = info[0]
@@ -43,8 +42,8 @@ def get_foundergenofile():
                     n='B'
                 samples[count]+=',{0}'.format(n)    
                 count+=1
-    for s in samples:
-        txt+='\n'+samples[s]
+    for k in range(key):
+        txt+='\n'+samples[k]
     print "Writing out to {0}".format(args.outfile)
     with open(args.outfile,'w') as outfile:
         outfile.write(txt)
