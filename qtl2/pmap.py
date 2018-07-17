@@ -18,8 +18,9 @@ This csv file is formatted for use with R/qtl2""")
     args=parser.parse_args()
     return args
 
+
 def call_bcftools(vcf):
-    process=Popen(["bcftools","query","-f","'%ID,%CHROM,%POS\n'",vcf],stdout=PIPE,stderr=PIPE)
+    process=Popen(["bcftools","query","-f","%ID,%CHROM,%POS\n",vcf],stdout=PIPE,stderr=PIPE)
     stdout,stderr=process.communicate()
     print(stderr)
     return stdout
@@ -29,7 +30,7 @@ def get_pmap():
     args=parse_args()
     txt='marker,chr,pos\n'
     stdout=call_bcftools(args.infile)
-    markers=stdout.split('\n')
+    markers=stdout.split('\n')[:-1]
     for line in markers:
         info = line.split(',')
         marker = info[0]

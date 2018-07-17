@@ -37,36 +37,35 @@ def get_tmp(vcf):
 def get_foundergenofile():
     args=parse_args()
     txt='ind'
-    samples={}
+    geno={}
     founders=get_founders(args.infile)
     numf=len(founders)
     print(founders)
     f=''
     lcode=string.ascii_uppercase
-    for l in range(1,numf+1):
-        samples[l]=[lcode[l-1]]
-        f+='{0},{1}\n'.format(founders[l-1],lcode[l-1])
+    for s in range(1,numf+1):
+        geno[s]=[lcode[s-1]]
+        f+='{0},{1}\n'.format(founders[s-1],lcode[s-1])
     print "Writing founder codes to FounderCodes.csv"
     with open('FounderCodes.csv','w') as ffile:
         ffile.write(f)
     info=get_tmp(args.infile)
-    for s in range(1,numf+1):
-        for i in info:
-            split=i.split('\t')
-            marker = split[0]
-            txt+=','+marker
-            count=1
-            for n in split[1:]:
-                if './.' in n:
-                    n='NA'
-                elif '0' in n:
-                    n='A'
-                else:
-                    n='B'
-                samples[count].append(n)
-                count+=1
-    for j in samples.keys():
-        txt+='\n'+ ','.join(samples[j])
+    for i in info:
+        split=i.split('\t')
+        marker = split[0]
+        txt+=','+marker
+        count=1
+        for n in split[1:]:
+            if './.' in n:
+                n='NA'
+            elif '0' in n:
+                n='A'
+            else:
+                n='B'
+            geno[count].append(n)
+            count+=1
+    for j in geno.keys():
+        txt+='\n'+ ','.join(geno[j])
     print "Writing out to {0}".format(args.outfile)
     with open(args.outfile,'w') as outfile:
         outfile.write(txt)
