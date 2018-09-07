@@ -36,16 +36,18 @@ def approx_cM(chrom,start,end,ref='v4'):
     cmap=ogutmap[ogutmap['chr']==chrom]
     cmap.reset_index(inplace=True)
     #Closest ogut map markers above and below the start and end postions
-    below=cmap.iloc[cmap[cmap['pos']<=start]['pos'].idxmax(),]
-    above=cmap.iloc[cmap[cmap['pos']>=end]['pos'].idxmin(),]
-    xpoints=[below['pos'],above['pos']]
-    ypoints=[below['cM'],above['cM']]
-    #Linear regression of genetic position on physical position using two closest points
-    slope,intercept,r_value,p_value,stderr = stats.linregress(xpoints,ypoints)
-    start_cM=slope*start + intercept
-    end_cM=slope*end + intercept
+    dist=[]
+    for p in [start,end]:
+        below=cmap.iloc[cmap[cmap['pos']<=p]['pos'].idxmax(),]
+        above=cmap.iloc[cmap[cmap['pos']>=p]['pos'].idxmin(),]
+        xpoints=[below['pos'],above['pos']]
+        ypoints=[below['cM'],above['cM']]
+        #Linear regression of genetic position on physical position using two closest points
+        slope,intercept,r_value,p_value,stderr = stats.linregress(xpoints,ypoints)
+        cM=slope*p + intercept
+        dist.append(cM)
     #return the genetic distance
-    return abs(end_cM-start_cM)
+    return abs(dist[1]-dist[0])
 
 
 

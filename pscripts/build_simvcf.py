@@ -8,14 +8,16 @@ import numpy as np
 
 def get_args():
     parser=argparse.ArgumentParser(description="""Program description""")
-    parser.add_argument("infile",type=str,help="""The input breakpoint file (output of write_outfile()""")
-    parser.add_argument("outfile",type=str,help="""The desired output vcf file basename (i.e. basename.vcf)""")
-    parser.add_argument("markerfile",type=str,help="""File with list of marker postions (from marker_generator.py""")
+    parser.add_argument("infile",type=str,help="""The input vcf file""")
+    parser.add_argument("outfile",type=str,help="""The output vcf file""")
+    parser.add_argument("donorpath",type=str,help="""The path to the location of the donor files""")
+    parser.add_argument("--markerfile",type=str,help=""""File with list of marker postions""")
+    parser.add_argument("--all",type=bool,help="""If True, use all of the marker positions available in the donor files""")
     args = parser.parse_args()
     return args
 
 
-def co_loc(sample,bedfile,c=10):
+def co_loc(sample,bedfile):
     """Returns regions of a chromosome received from particular parents in an individual RIL chromosome
     Input:
     breaks: pandas df of format: "start" "donor"
@@ -26,9 +28,9 @@ def co_loc(sample,bedfile,c=10):
     """
     s = bedfile[bedfile['sample']==sample]
     locs=[]
-    parents = s['donor'].unique()
+    parents = s['donor1'].unique()
     for index,row in s.iterrows():
-        locs.append([row['chr'],int(row['start']),int(row['end']),row['donor']])
+        locs.append([row['chr'],int(row['start']),int(row['end']),row['donor1']])
     return locs,parents
 
     
@@ -48,6 +50,14 @@ def marker_regions(pbreaks,markerfile,rfile,c=10):
     with open(rfile,'w') as outfile:
     	outfile.write(regions)
 
+        
+def all_regions(pbreaks,rfile):
+    txt=""
+    for i in pbreaks:
+        txt+='{0}\t{1}\t{2}\n'.format(i[0],i[1],i[2])
+    with open(rfile,'w') as outfile:
+        outfile.write(txt)
+        
 
 def bcftools_view(donorfile,regionsfile=None,header=False):
     if header ==True:
@@ -62,7 +72,7 @@ def main():
     args=get_args()
     bedfile = pd.read_table('{0}'.format(args.infile),sep='\t')
     samples = bedfile['sample'].unique()
-    header,stderr=bcftools_view(donorfile='../hmp3_founders2/hmp3_founders_final.vcf.gz',header=True)
+    header,stderr=bcftools_view(donorfile='../biogemma/BiogemmaFounders_600K_Genotypes_AGPv4.vcf.gz',header=True)
     print(stderr)
     for sample in samples:
         vcf = header
@@ -70,8 +80,11 @@ def main():
         for i in parents:
             pbreaks = [j for j in breaks if j[3]==i]        
             regionsfile='{0}_{1}_regions.txt'.format(i,sample)
-            marker_regions(pbreaks=pbreaks,markerfile=args.markerfile,rfile=regionsfile,c=10)
-            positions,stderr=bcftools_view(donorfile='../hmp3_founders2/{0}_c10_hmp321_final.vcf.gz'.format(i),regionsfile=regionsfile)
+            if args.all == True:
+                all_regions(pbreaks=pbreaks,rfile=regionsfile)
+            else:
+                marker_regions(pbreaks=pbreaks,markerfile=args.markerfile,rfile=regionsfile,c=10)
+            positions,stderr=bcftools_view(donorfile='{0}/{1}_600K_Genotypes_AGPv4.vcf.gz'.format(args.donorpath,i),regionsfile=regionsfile)
             print(stderr)
 	    vcf+=positions
         with open('{0}_{1}'.format(sample,args.outfile),'w') as outfile:
