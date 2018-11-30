@@ -22,20 +22,20 @@ library("reshape2")
 library("tibble")
 library('igraph')
 library('abind')
-setwd("~/Documents/PBGG/MAGIC/qtl2/Biogemma_071118/")
+setwd("~/Documents/PBGG/MAGIC/impute")
 ```
 
 Read in files for genotype probabilities and IBD segments
 
 ``` {r files}
-pr10=readRDS('bg10_geno_probs.rds')
-ibd=readRDS('bg10_ibdsegments.rds')
+pr10=readRDS('../qtl2/Biogemma_071118/bg10_geno_probs.rds')
+ibd=readRDS('../qtl2/Biogemma_071118/bg10_ibdsegments.rds')
 ```
 
 Match letter codes to founder names for easier comparison
 ``` {r founders}
 founders=c("A632_usa","B73_inra","CO255_inra","FV252_inra","OH43_inra","A654_inra","FV2_inra","C103_inra","EP1_inra","D105_inra","W117_inra","B96","DK63","F492","ND245","VA85")
-founderfile=fread('../Founder_colorcodes.txt',header=F)
+founderfile=fread('../qtl2/Founder_colorcodes.txt',header=F)
 names(founderfile)=c('line','hex')
 code=c("A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P")
 founderfile$code=code
@@ -85,7 +85,7 @@ while(start<max(ibd$right_pos)){
     ibd_graph=abind(ibd_graph,adj)
     graph=graph_from_adjacency_matrix(adj,mode=c('undirected'))
     blocks=unname(components(graph)$membership)
-    n_grps=length(unique(components(graph)$membership))
+    n_grps=components(graph)$no
   }
   else{
     blocks=seq(1,16)
@@ -97,6 +97,37 @@ while(start<max(ibd$right_pos)){
 ibd_segments=as.data.frame(ibd_segments)
 names(ibd_segments)=c('chrom','start','end',founders,'n_haps')
 ```
+I wanted to select the haplotype segments which were "incomplete" in terms of IBD pairs (A and B, B and C are in IBD, but not A and C). If a haplotype group is complete, the number of edges in the graph connecting them should be n choose 2, where n is the number of lines in the haplotype group. 
+I compared the haplotype block size for the incomplete and complete blocks. They do not seem to be much different in size. There are 1929 such incomplete segments in chromosome 10. I do not know whether or not this will be a problem.
+
+```{r not_complete}
+not_complete=c()
+for(i in seq(1,dim(ibd_graph)[3])){
+  adj=ibd_graph[,,i]
+  graph=graph_from_adjacency_matrix(adj,mode=c('undirected'))
+  n_grps=components(graph)$no
+  for(j in seq(1,n_grps)){
+      size=components(graph)$csize[j]
+      if(size>2){
+        grp=graph_from_adjacency_matrix(adj[components(graph)$membership==j,components(graph)$membership==j],mode=c('undirected'))
+        if(choose(size,2)>gsize(grp)){
+          not_complete=c(not_complete,i)
+        }
+      }
+  }
+}
+
+incomplete=seq(1,dim(ibd_segments)[1]) %in% not_complete
+ibd_segments$incomplete=incomplete
+ibd_segments$segsize=ibd_segments$end-ibd_segments$start
+
+sub=ibd_segments[ibd_segments$segsize<1e6,]
+
+ggplot(sub,aes(x=incomplete,y=segsize)) + geom_boxplot(aes(color=incomplete))
+```
+
+
+
 
 Write out this table to a file for later use
 
