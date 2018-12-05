@@ -31,6 +31,14 @@ def get_total(pred):
     return total
 
 
+#def percent_guess(actual,pred):
+#    """Calculates the proportion of the actual individual that was predicted"""
+#    all_pred=get_total(pred)
+#    all_actual=get_total(actual)
+#    diff=all_actual-all_pred
+#    return round(float(diff)/all_actual,3)
+
+
 def percent_heterozygous(infile):
     """Calculates the percentage of heterozygous calls in a sample"""
     df = pd.read_table(infile)
@@ -126,20 +134,23 @@ def get_overlap(stdout):
 def format_out(all_samples,samples,chroms):
     """Takes in the dictionary all_samples and formats the data for output in the intersect_output.txt
     file."""
-    txt="Line\tTotal % Correct\tChrom\t% per Parent\n"
+    txt="Line\tTotal % Correct\tTotal % Guessed\tChrom\t% per Parent\n"
     for r in samples:
         total=all_samples[r]['total']
-        tmp="{0}\t{1}\t".format(r,total)
+        pguess=all_samples[r]['pguess']
+        tmp="{0}\t{1}\t{2}".format(r,total,pguess)
         for c in chroms:
             tmp+='{0}'.format(c)
             parents = all_samples[r][c]["parent"]
             perc = all_samples[r][c]["perc_correct"]
+            #cpguess=all_samples[r][c]["pguess"]
             for i in range(len(parents)):
                 tmp+='\t{0}:{1}'.format(parents[i],perc[i])
             txt+=tmp+'\n'
     txt+='\nTotal Percentage Correct: {0}\n'.format(all_samples['fulltotal'])
-    txt+='Percentage of Homozygous Calls Correct: {0}\n'.format(all_samples['homozygoustotal'])
-    txt+='Percentage of Heterozygous Calls: {0}\n'.format(all_samples['het'])
+    txt+='Proportion of Homozygous Calls Correct: {0}\n'.format(all_samples['homozygoustotal'])
+    txt+='Proportion of Heterozygous Calls: {0}\n'.format(all_samples['het'])
+    txt+='Average Proportion of Individual Predicted: {0}\n'.format(all_samples['percentguess'])
     return txt
 
 
@@ -149,8 +160,11 @@ def intersect(sample,c,parents):
     r_pred='tmp/{0}_{1}_pred.bed'.format(sample,c)
     r_pred_all='tmp/{0}_{1}_pred_all.bed'.format(sample,c)
     total=get_total(r_pred)
-    per_parent={"parent":[],"perc_correct":[],"right":0,"total":0}
+    a_total=get_total(r_actual)
+    per_parent={"parent":[],"perc_correct":[],"perc_guess":0,"right":0,"total":0}
     per_parent['total']=total
+    per_parent['a_total']=a_total
+    per_parent['pguess']=round(float(total)/a_total,3)
     for p in parents:
         afile='tmp/{0}_{1}_{2}.bed'.format(sample,c,p)
         bfile='tmp/{0}_{1}_{2}_pred.bed'.format(sample,c,p)
@@ -164,7 +178,7 @@ def intersect(sample,c,parents):
         else:
             per_parent['parent'].append(p)
             per_parent['perc_correct'].append(0)
-            print('Parent {0} not shared between actual and predicted in sample {1} chr {2}\n').format(p,sample,c)
+            #print('Parent {0} not shared between actual and predicted in sample {1} chr {2}\n').format(p,sample,c)
     return per_parent
 
 def main():
@@ -180,16 +194,21 @@ def main():
         all_samples[r]={}
         r_total=0
         r_right=0
+        r_guess=0
+        a_total=0
         for c in chroms:
             all_samples[r][c] = intersect(r,c,parents)
+            a_total+=(all_samples[r][c]['a_total'])
             pright+=(all_samples[r][c]['right'])
             ptotal+=(all_samples[r][c]['total'])
             r_right+=(all_samples[r][c]['right'])
             r_total+=(all_samples[r][c]['total'])
         all_samples[r]['total']=round(float(r_right)/r_total,3)
+        all_samples[r]['pguess']=round(float(r_total)/a_total,3)
     all_samples['het'],fulltotal=percent_heterozygous(pred)
     all_samples['fulltotal'] = round(float(pright)/fulltotal,3)
     all_samples['homozygoustotal']=round(float(pright)/ptotal,3)
+    all_samples['percentguess']=round(np.mean([all_samples[r]['pguess'] for r in samples]),3)
     output = format_out(all_samples,samples,chroms)
     with open('intersect_output.txt','w') as outfile:
         outfile.write(output)
@@ -198,3 +217,4 @@ def main():
 if __name__ == "__main__":
     process = Popen(['mkdir','tmp'],stdout=PIPE,stderr=PIPE)
     main()
+23576825
