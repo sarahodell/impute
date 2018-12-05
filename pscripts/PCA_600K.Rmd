@@ -1,0 +1,130 @@
+---
+title: "PCA"
+author: "Sarah Odell"
+date: "8/7/2018"
+output: html_document
+---
+
+#Principal Component Analysis of 600K Array of the Biogemma Population
+
+Code using SNPRelate to create a PCA of the 600K genotype data for the Biogemma founders and the 344 DH lines.
+
+Load the required packages.
+``` {r packages}
+library("SNPRelate")
+library("data.table")
+library("ggplot2")
+library("ggrepel")
+```
+
+Create a file of the labels for each individual. Labelling the founders, tester, and the DH lines.
+``` {r pop_data}
+ind=fread('../biogemma/bg_all.txt',data.table=F,header=F)
+sample.id=ind$V1
+pop_code=c(ind$V1[1:17],rep("DH",344))
+```
+
+Convert the VCF file of the genotype data to a GDS file.
+``` {r loadvcf}
+vcf.fn<-"../biogemma/Biogemma_600K_Genotypes_AGPv4_norm.vcf.gz"
+snpgdsVCF2GDS(vcf.fn,"../biogemma/biogemma.gds",method="biallelic.only")
+```
+
+Load the gds file.
+``` {r loadgds}
+genofile<-snpgdsOpen("../biogemma/biogemma.gds")
+snpgdsSummary("../biogemma/biogemma.gds")
+```
+
+For creating the PCA plot, we want to filter the SNPs that are in 
+high LD with one another. I will run this with two LD thresholds (0.2 and 1.0)
+``` {r snpset1}
+snpset1<-snpgdsLDpruning(genofile,ld.threshold = 0.2)
+#With LD 0.2 used 18,423 markers
+snpset1.id<-unlist(snpset1)
+```
+
+Create the PCA using the filtered SNPs
+```{r pca}
+pca1<-snpgdsPCA(genofile,snp.id = snpset1.id,num.thread = 2)
+pc.percent <-pca1$varprop*100
+head(round(pc.percent),2)
+```
+
+Create a dataframe of the first two PCAs for plotting
+``` {r tab}
+tab1 <- data.frame(sample.id = pca1$sample.id,
+        pop = factor(pop_code)[match(pca1$sample.id, sample.id)],
+        EV1 = pca1$eigenvect[,1],    # the first eigenvector
+        EV2 = pca1$eigenvect[,2],    # the second eigenvector
+        stringsAsFactors = FALSE)
+head(tab1)
+```
+
+
+I create a list of founders and hex color codes for plotting.
+``` {r colors}
+hex_colors=c("#f42896","#84ef7c","#234489","#8ed1d6","#702349",
+             "#f2875b","#f1ff00","#bbbbbb","#ff2a3a","#56cc59",
+             "#663dd3","#478959","#47145b",'#0f0e0e',"#ad147a",
+             "#afb735",'#ff5a00','#fc1919')
+founders=c("A632_usa","B73_inra","CO255_inra","FV252_inra",
+  "OH43_inra","A654_inra","FV2_inra","C103_inra","EP1_inra","D105_inra","W117_inra","B96","DK63","F492","ND245","VA85","DH","MBS847")
+```
+
+And plot the PCA. With LD threshold of 0.2, the tester and one of the founders and DH lines separate quite dramatically...
+``` {r pca_plot}
+print(ggplot(data=tab1,aes(x=EV1,y=EV2,color=pop)) + geom_point(alpha=0.6) + scale_color_manual(values=hex_colors) +
+  ylab(sprintf("PC2 %.3f %%",pc.percent[2])) + xlab(sprintf("PC1 %.3f %%",pc.percent[1])) + ggtitle("PCA of Biogemma 600K genotypes (LD Threshold 0.2)"))
+```
+
+Here we can look at the first four PCAs pairwise
+```{r pairwise}
+lbls <- paste("PC", 1:4, "\n", format(pc.percent[1:4], digits=2), "%", sep="")
+pairs(pca1$eigenvect[,1:4], col=tab1$pop, labels=lbls)
+```
+
+The first principle component separates the rest of the lines form these three. The test is different,
+which makes sense, but the founder DK63 is quite different (should look at the percentage it ends up
+contributing to the DHs) and then one DH line
+``` {r which}
+tab1[tab1$EV1>0.2,]
+```
+
+### LD Threshold of 1.0
+``` {r snpset2}
+snpset2<-snpgdsLDpruning(genofile,ld.threshold = 1.0)
+#With LD 1.0 used 423,524 markers
+snpset2.id<-unlist(snpset2)
+
+pca2<-snpgdsPCA(genofile,snp.id = snpset2.id,num.thread = 2)
+pc2.percent <-pca2$varprop*100
+head(round(pc2.percent),2)
+```
+
+Create a dataframe of the first two PCAs for plotting
+``` {r tab2}
+tab2 <- data.frame(sample.id = pca2$sample.id,
+        pop = factor(pop_code)[match(pca2$sample.id, sample.id)],
+        EV1 = pca2$eigenvect[,1],    # the first eigenvector
+        EV2 = pca2$eigenvect[,2],    # the second eigenvector
+        stringsAsFactors = FALSE)
+head(tab2)
+```
+
+And plot the PCA. With LD threshold of 1.0, the separation that was occuring seems to disappear.
+
+``` {r pca_plot2}
+print(ggplot(data=tab2,aes(x=EV1,y=EV2,color=pop,label=pop))+ geom_point(alpha=0.6) + scale_color_manual(values=hex_colors) + ylab(sprintf("PC2 %.3f %%",pc2.percent[2])) + xlab(sprintf("PC1%.3f %%",pc2.percent[1])) +
+        geom_text_repel(data=subset(tab2,pop!='DH'),
+                         segment.size=0.2,
+                        point.padding = 0.5,
+                         segment.color='grey50') +
+        ggtitle("PCA of Biogemma 600K genotypes (LD Threshold 1.0)") + guides(color=FALSE))
+```
+
+Here we can look at the first four PCAs pairwise
+```{r pairwise2}
+lbls <- paste("PC", 1:4, "\n", format(pc2.percent[1:4], digits=2), "%", sep="")
+pairs(pca2$eigenvect[,1:4], col=tab2$pop, labels=lbls)
+```

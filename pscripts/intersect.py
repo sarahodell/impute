@@ -7,7 +7,7 @@ import sys
 import argparse
 from subprocess import PIPE,Popen,STDOUT
 import pandas as pd
-import os.path
+import os
 import numpy as np
 
 def arg_parse():
@@ -115,7 +115,6 @@ def call_bedtools(afile,bfile):
     should be from the same parent"""
     process = Popen(['bedtools','intersect','-wao','-a',afile,'-b',bfile],stdout=PIPE,stderr=STDOUT)
     stdout,stderr = process.communicate()
-    print(stderr)
     return stdout
 
 
@@ -178,7 +177,10 @@ def intersect(sample,c,parents):
         else:
             per_parent['parent'].append(p)
             per_parent['perc_correct'].append(0)
+<<<<<<< HEAD
             #print('Parent {0} not shared between actual and predicted in sample {1} chr {2}\n').format(p,sample,c)
+=======
+>>>>>>> 18f7342e0dd2677cde1342267547146b8a4bd01f
     return per_parent
 
 def main():
@@ -215,6 +217,11 @@ def main():
 
 
 if __name__ == "__main__":
+    assert (os.path.isdir('tmp/')==False,"The directory tmp/ already exists")
     process = Popen(['mkdir','tmp'],stdout=PIPE,stderr=PIPE)
     main()
+<<<<<<< HEAD
 23576825
+=======
+    process=Popen(['rm','-r','tmp'],stdout=PIPE,stderr=PIPE)
+>>>>>>> 18f7342e0dd2677cde1342267547146b8a4bd01f

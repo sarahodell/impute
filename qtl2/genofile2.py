@@ -2,7 +2,7 @@
 
 """
 Takes a vcf file and converts it to a csv format with markers as columns and samples as rows
-with nucleotide information in IUPAC format.
+with nucleotide information in encoded as letters (i.e. A,B,..). Requires bcftools 
 This csv file is formatted for use with R/qtl2
 """
 

@@ -1,0 +1,195 @@
+---
+title: "IBD_Corr_Filter"
+author: "Sarah Odell"
+date: "8/17/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Filtering Markers based on IBD Segment and Correlation of Genotype Probabilities
+Using Chromosome 10 for 10 DH lines
+
+```{r setup}
+library('qtl2')
+library("tidyverse")
+library("dplyr")
+library("data.table")
+library("ggplot2")
+library("reshape2")
+library("tibble")
+library('igraph')
+library('abind')
+setwd("~/Documents/PBGG/MAGIC/impute")
+```
+
+Read in files for genotype probabilities and IBD segments
+
+``` {r files}
+pr10=readRDS('../qtl2/Biogemma_071118/bg10_geno_probs.rds')
+ibd=readRDS('../qtl2/Biogemma_071118/bg10_ibdsegments.rds')
+```
+
+Match letter codes to founder names for easier comparison
+``` {r founders}
+founders=c("A632_usa","B73_inra","CO255_inra","FV252_inra","OH43_inra","A654_inra","FV2_inra","C103_inra","EP1_inra","D105_inra","W117_inra","B96","DK63","F492","ND245","VA85")
+founderfile=fread('../qtl2/Founder_colorcodes.txt',header=F)
+names(founderfile)=c('line','hex')
+code=c("A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P")
+founderfile$code=code
+i1 <- match(ibd$strain1,founderfile$code)
+i2 <- match(ibd$strain2,founderfile$code)
+ibd$line1=founderfile$line[i1]
+ibd$line2=founderfile$line[i2]
+
+ibd$pair=do.call(paste,c(ibd[c('line1','line2')],sep="-"))
+```
+
+
+We want to identify unique haplotype regions where a set number of founders are in IBD with one another. This will allow us to collapse the number of haplotypes in this regions from 16 to however many unique haplotypes are within that region (i.e. if 4 founders are in IBD in this region, then there are 13 unique haplotypes).
+
+Build and adjacency matrix of IBD pairs and
+Count number of 'islands' from the adjacency matrix.
+Unique haplotype groups are assigned to a particular integer
+
+```{r ibd_segments}
+ibd=ibd[order(ibd$left_pos),]
+rownames(ibd)=seq(1,nrow(ibd))
+
+ibd_segments=c()
+start=min(ibd$left_pos) #start with first segment in chromosome
+ibd_graph=array(0,dim=c(16,16,1))
+while(start<max(ibd$right_pos)){
+  remaining=ibd[(ibd$left_pos>start | ibd$right_pos>=start),] #grab segments that are to the right of the start
+  remaining$left_dist=remaining$left_pos - start 
+  remaining$right_dist=remaining$right_pos - start
+  lowest_left=min(remaining$left_dist[remaining$left_dist>0])
+  lowest_right=min(remaining$right_dist[remaining$right_dist>0])
+  closest=min(lowest_left,lowest_right) #find the next start or end of segment that is closest to current start
+   if (lowest_left==closest){
+    next_break=remaining[remaining$left_dist==closest,]$left_pos[1]
+  }
+  if (lowest_right==closest){
+    next_break=remaining[remaining$right_dist==closest,]$right_pos[1]
+  }
+  within=remaining[(remaining$right_pos>=next_break) & (remaining$left_pos<=start),] #identify ibd segments that are between start and next_break
+
+  if(dim(within)[1]>=1){
+    adj=matrix(0,nrow=16,ncol=16,dimnames=list(founders,founders))
+    for (i in 1:nrow(within)){
+      adj[c(within[i,'line1']),c(within[i,'line2'])]=1
+      adj[c(within[i,'line2']),c(within[i,'line1'])]=1
+    }
+    ibd_graph=abind(ibd_graph,adj)
+    graph=graph_from_adjacency_matrix(adj,mode=c('undirected'))
+    blocks=unname(components(graph)$membership)
+    n_grps=components(graph)$no
+  }
+  else{
+    blocks=seq(1,16)
+    n_grps=16
+  }
+  ibd_segments=rbind(ibd_segments,c(10,start,next_break,blocks,n_grps))
+  start=next_break
+}
+ibd_segments=as.data.frame(ibd_segments)
+names(ibd_segments)=c('chrom','start','end',founders,'n_haps')
+```
+I wanted to select the haplotype segments which were "incomplete" in terms of IBD pairs (A and B, B and C are in IBD, but not A and C). If a haplotype group is complete, the number of edges in the graph connecting them should be n choose 2, where n is the number of lines in the haplotype group. 
+I compared the haplotype block size for the incomplete and complete blocks. They do not seem to be much different in size. There are 1929 such incomplete segments in chromosome 10. I do not know whether or not this will be a problem.
+
+```{r not_complete}
+not_complete=c()
+for(i in seq(1,dim(ibd_graph)[3])){
+  adj=ibd_graph[,,i]
+  graph=graph_from_adjacency_matrix(adj,mode=c('undirected'))
+  n_grps=components(graph)$no
+  for(j in seq(1,n_grps)){
+      size=components(graph)$csize[j]
+      if(size>2){
+        grp=graph_from_adjacency_matrix(adj[components(graph)$membership==j,components(graph)$membership==j],mode=c('undirected'))
+        if(choose(size,2)>gsize(grp)){
+          not_complete=c(not_complete,i)
+        }
+      }
+  }
+}
+
+incomplete=seq(1,dim(ibd_segments)[1]) %in% not_complete
+ibd_segments$incomplete=incomplete
+ibd_segments$segsize=ibd_segments$end-ibd_segments$start
+
+sub=ibd_segments[ibd_segments$segsize<1e6,]
+
+ggplot(sub,aes(x=incomplete,y=segsize)) + geom_boxplot(aes(color=incomplete))
+```
+
+
+
+
+Write out this table to a file for later use
+
+``` {r write}
+fwrite(ibd_segments,file="DH10_Chr10_IBD_Regions.txt",sep='\t',row.names = F,quote=F)
+```
+
+Lets create a plot to show how the number of unique haplotypes 
+changes as we move along the chromosome.
+```{r visualize}
+hex_colors=c("#f42896","#84ef7c","#a8bc44","#8ed1d6","#702349",
+             "#f2875b","#28ad26","#afd3ef","#937266","#56cc59",
+             "#663dd3","#478959","#47145b","#7c2126","#ad147a",
+             "#afb735")
+
+
+ggplot(ibd_segments, aes(start, n_haps)) +
+  geom_segment(aes(xstart=start,xend = end,color="red", ystart=n_haps,yend=n_haps),lineend="butt",size=10) +
+  ggtitle("Number of Unique Chromosome 10 Haplotypes") + xlab("Position (Mb)") + ylab("Haplotype Number")+guides(color=F)
+```
+
+
+As you can see, there is a lot of variation in haplotype number. There are some regions, particularly around the centromere, where the number of unique haplotypes in the founders is very low.
+
+``` {r format}
+ibd_segments=fread("DH10_Chr10_IBD_Regions.txt",data.table=F)
+pmap=fread('startfiles/Biogemma_pmap_c10.csv',data.table=F)
+fgeno=fread('startfiles/Biogemma_foundergeno_c10.csv',data.table=F)
+fgeno=t(fgeno)
+fgeno=as.data.frame(fgeno)
+names(fgeno)=founders
+
+binfgeno=ifelse(fgeno[2:nrow(fgeno),]=='A',0,1)
+binfgeno=as.data.frame(binfgeno)
+binfgeno=rownames_to_column(binfgeno,'marker')
+b = merge(binfgeno,pmap,by='marker')
+b = b[order(b$pos),]
+rownames(b)=seq(1,nrow(b))
+fgeno=b[,c('marker','chr','pos',founders)]
+
+dimnames(binfgeno)=list(rownames(binfgeno),founders)
+pmap$pos=pmap$pos*1e6
+len=dim(pr10[[1]])[3]
+for(i in 1:len){
+  marker=pr10[[1]][,,i]
+  
+}
+
+marker=pr10[[1]][,,1]
+samples=names(marker[,1])
+dimnames(marker)=list(samples,founders)
+
+site=pmap$pos[1]
+f_alleles=fgeno[fgeno$pos==site,]
+hap_grps=ibd_segments[ibd_segments$start<=site & ibd_segments$end>site,]
+
+for(h in 1:hap_grps$n_haps){
+  in_grp=hap_grps[4:19]==h
+}
+
+
+
+
+
+```
