@@ -19,7 +19,7 @@ library("ggrepel")
 
 Create a file of the labels for each individual. Labelling the founders, tester, and the DH lines.
 ``` {r pop_data}
-ind=fread('../biogemma/bg_all.txt',data.table=F,header=F)
+ind=fread('../../biogemma/bg_all.txt',data.table=F,header=F)
 sample.id=ind$V1
 pop_code=c(ind$V1[1:17],rep("DH",344))
 ```
@@ -32,8 +32,8 @@ snpgdsVCF2GDS(vcf.fn,"../biogemma/biogemma.gds",method="biallelic.only")
 
 Load the gds file.
 ``` {r loadgds}
-genofile<-snpgdsOpen("../biogemma/biogemma.gds")
-snpgdsSummary("../biogemma/biogemma.gds")
+genofile<-snpgdsOpen("../../biogemma/biogemma.gds")
+snpgdsSummary("../../biogemma/biogemma.gds")
 ```
 
 For creating the PCA plot, we want to filter the SNPs that are in 

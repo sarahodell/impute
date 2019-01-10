@@ -28,6 +28,7 @@ This code is modified from Ryan Dale (https://gist.github.com/daler/c98fc410282d
     parser.add_argument("out",type=str,default="image.png",help="""Name out image file to be outputed""")
     parser.add_argument("--colors",type=str,default=None,help="""tab-delimited File with parent and corresponding rbs color code, if None, colors are randomly generated""")
     parser.add_argument("--title",type=str,default="Parental Donors",help="Title of plot")
+    parser.add_argument("--physical",type=bool,default=True,help="In units of Mb or cM? If true, than physical distance (Mb)")
     args = parser.parse_args()
     return args
 
@@ -83,7 +84,7 @@ def make_legend(parents,color_lookup):
     for p in parents:
         pcolor=color_lookup[p]
         legend+=[Line2D([0],[0],color=pcolor,lw=4,label=p)]
-    legend+=[Line2D([0],[0],color=(0.0,0.0,0.0),lw=4,label='Cent')]
+    #legend+=[Line2D([0],[0],color=(0.0,0.0,0.0),lw=4,label='Cent')]
     return legend
 
 def get_colors(colors,parents):
@@ -154,7 +155,10 @@ def draw_plot():
     ax.set_yticks([chrom_centers[i] for i in chromosome_list])
     ax.set_yticklabels(chromosome_list)
     ax.axis('tight')
-    ax.set_xlabel('Position')
+    if args.physical==True:
+        ax.set_xlabel('Position (Mb)')
+    else:
+        ax.set_xlabel('Position (cM)')
     ax.set_ylabel('Line Number')
     ax.set_title(args.title)
 
