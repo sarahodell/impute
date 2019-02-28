@@ -2,6 +2,8 @@ haplotypes directory contains R scripts for running imputation pipeline, calcula
 
 Files:
 
+breakup_haplos.R - Break up haplotype probability files so that each chromosome has h files where h is the number of unique haplotype groups and hap[[i]] is an nxp matrix of probabilities that individual n has haplotype i at marker p. Filters the haplotype probabilitiy files so that markers within haplotype groups that have a correlation of 0.95 or higher are dropped. Dropped markers are saved in an R object file with reference to the kept marker it was correlated with.
+
 control_file.R - script for creating R/qtl2 json control files
 
 fix_pmap.R - simple script to convert physical map file positions from Mb to bp
