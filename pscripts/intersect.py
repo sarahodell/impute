@@ -217,7 +217,7 @@ def main():
 
 
 if __name__ == "__main__":
-    assert (os.path.isdir('tmp/')==False,"The directory tmp/ already exists")
+    #assert (os.path.isdir('tmp/')==False,"The directory tmp/ already exists")
     process = Popen(['mkdir','tmp'],stdout=PIPE,stderr=PIPE)
     main()
 <<<<<<< HEAD

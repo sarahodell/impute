@@ -15,17 +15,17 @@ def arg_parse():
     return args
 
 
-def chrom_info(chro_num):
+def chrom_info(chro_num,cent):
     """chro_num: chromosome number (int)
     Outputs:
     end: (int) the approximate end of the chromosome, in Mb
     """
-    cent = pd.read_table('B73v4centromeres.txt',sep='\t')
+    #cent = pd.read_table('data_files/B73v4centromeres.txt',sep='\t')
     cdf = cent[cent['chr']==chro_num]
-    end = int(cdf['v3chr.end'].values[0])
-    centstart = int(cdf['v3start'].values[0])
-    centend= int(cdf['v3end'].values[0])
-    centlen = int(round(cdf['v3size'].values[0]))
+    end = int(cdf['v4chr.end'].values[0])
+    centstart = int(cdf['v4start'].values[0])
+    centend= int(cdf['v4end'].values[0])
+    centlen = int(round(cdf['v4size'].values[0]))
     if end-centend > centstart:
         longarm = end-centend
         shortarm = centstart
@@ -43,7 +43,7 @@ def chrom_info(chro_num):
     return xo_prob,end
 
 
-def chrom_sim(founders,pnum,c=10):
+def chrom_sim(founders,pnum,cent,c=10):
     """
     pnum: (int) Number of parents to start with. Parents are randomly selected
     from the 26 NAM founders
