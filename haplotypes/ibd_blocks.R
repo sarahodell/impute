@@ -10,25 +10,16 @@ library('abind')
 
 args=commandArgs(trailingOnly=T)
 c=as.character(args[1])
+ibdfile=as.character(args[2])
+genofile=as.character(args[3])
+pmapfile=as.character(args[4])
+outfile=as.character(args[5])
 
-print(c)
-#bg=read_cross2(sprintf('Biogemma_c%s.json',c))
-#ibd=find_ibd_segments(bg$founder_geno,bg$pmap,min_lod=15,error_prob=0.002,cores=4)
-#fwrite(ibd,sprintf('bg%s_pairwise_ibdsegments_010319.txt',c))
+# Read in IBD segments from get_ibd.R
 
-ibd=fread(sprintf('bg%s_wgs_ibdsegments_010319.txt',c),data.table=F)
+ibd=fread(ibdfile,data.table=F)
 
 founders=c("A632_usa","B73_inra","CO255_inra","FV252_inra","OH43_inra","A654_inra","FV2_inra","C103_inra","EP1_inra","D105_inra","W117_inra","B96","DK63","F492","ND245","VA85")
-#founderfile=fread('Founder_colorcodes.txt',header=F)
-#names(founderfile)=c('line','hex')
-#code=c("A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P")
-#founderfile$code=code
-#i1 <- match(ibd$strain1,founderfile$code)
-#i2 <- match(ibd$strain2,founderfile$code)
-#ibd$line1=founderfile$line[i1]
-#ibd$line2=founderfile$line[i2]
-
-#ibd$pair=do.call(paste,c(ibd[c('line1','line2')],sep="-"))
 
 ibd=ibd[order(ibd$left_pos),]
 rownames(ibd)=seq(1,nrow(ibd))
@@ -74,9 +65,9 @@ names(ibd_segments)=c('chrom','start','end',founders,'n_haps')
 saveRDS(ibd_graph,sprintf('bg%s_ibd_graph.rds',c))
 fwrite(ibd_segments,sprintf('bg%s_ibd_blocks.txt',c),row.names=F,quote=F,sep='\t')
 
-pr=readRDS(sprintf('bg%s_genoprobs_010319.rds',c))
-pmap=fread(sprintf('Biogemma_pmap_c%s.csv',c),data.table=F)
-#dimnames(pr[[1]])[[2]]=founders
+pr=readRDS(genofile)
+pmap=fread(pmapfile,data.table=F)
+
 samples=unlist(dimnames(pr[[1]])[1])
 
 final_haplo=list(chr=c)
@@ -126,4 +117,4 @@ for(h in groups){
 }
 
 # for each IBD segment
-saveRDS(final_haplo,sprintf('bg%s_haplotype_probs_010319.rds',c))
+saveRDS(final_haplo,outfile)

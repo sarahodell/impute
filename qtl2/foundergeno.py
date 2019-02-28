@@ -44,7 +44,7 @@ def get_foundergenofile():
     f=''
     lcode=string.ascii_uppercase
     for s in range(1,numf+1):
-        geno[s]=[lcode[s-1]]
+        geno[s]=[founders[s-1]]
         f+='{0},{1}\n'.format(founders[s-1],lcode[s-1])
     print "Writing founder codes to FounderCodes.csv"
     with open('FounderCodes.csv','w') as ffile:
@@ -55,15 +55,26 @@ def get_foundergenofile():
         marker = split[0]
         txt+=','+marker
         count=1
-        for n in split[1:]:
-            if './.' in n:
-                n='NA'
-            elif '0' in n:
-                n='A'
-            else:
-                n='B'
-            geno[count].append(n)
-            count+=1
+        if 2 in split[1:]:
+            for n in split[1:]:
+                if './.' in n:
+                    n='NA'
+                elif '1' in n:
+                    n='A'
+                else:
+                    n='B'
+                geno[count].append(n)
+                count+=1
+        else:
+            for n in split[1:]:
+                if './.' in n:
+                    n='NA'
+                elif '0' in n:
+                    n='A'
+                else:
+                    n='B'
+                geno[count].append(n)
+                count+=1
     for j in geno.keys():
         txt+='\n'+ ','.join(geno[j])
     print "Writing out to {0}".format(args.outfile)

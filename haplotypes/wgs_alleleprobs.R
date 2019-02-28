@@ -5,12 +5,16 @@ library('dplyr')
 library('tibble')
 
 args=commandArgs(trailingOnly=TRUE)
-c=as.character(args[1])
+genofile=as.character(args[1])
+imputefile=as.character(args[2])
+pmapfile=as.character(args[3])
+outfile=as.character(args[4])
 
+print("Starting allele probability imputation step")
 
 founders=c("A632_usa","B73_inra","CO255_inra","FV252_inra","OH43_inra","A654_inra","FV2_inra","C103_inra","EP1_inra","D105_inra","W117_inra","B96","DK63","F492","ND245","VA85")
 
-binfinal=fread(sprintf('wgs_founders/Biogemma_WGS_all_alleles_final_chr%s.txt',c),data.table=F)
+binfinal=fread(imputefile,data.table=F)
 
 #Turn all NA values to zero for calculating allele probs.
 freq=rowMeans(binfinal[,5:20],na.rm=T)
@@ -23,9 +27,9 @@ options(scipen=999)
 
 #for each chromosome
 #read in files
-pr=readRDS(sprintf('data/bg%s_genoprobs.rds',c))
+pr=readRDS(genofile)
 #Read in physical map
-pmap=fread(sprintf('qtl2_startfiles/Biogemma_pmap_c%s.csv',c),data.table=F)
+pmap=fread(pmapfile,data.table=F)
 
 wgslen=dim(binfinal)[1]
 sub=as.matrix(binfinal[,c(founders)])
@@ -69,4 +73,4 @@ all_probs_t$alt1=alt1
 all_probs_t$ref=ref
 all_probs_t=all_probs_t[,c('marker','alt1','ref',samples)]
 print("Writing allele probs to file")
-fwrite(all_probs_t,sprintf('data/bg%s_wgs_alleleprobs.txt',c),row.names=F,sep='\t',quote=F)
+fwrite(all_probs_t,outfile,row.names=F,sep='\t',quote=F)
