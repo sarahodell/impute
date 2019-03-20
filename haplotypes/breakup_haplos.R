@@ -22,9 +22,11 @@ for(h in 1:length(hap)){
 	dropped[[count]]=list(marker=c(m_names[1]),linked=c())
 	
 	keep=c(1)
-	start=apply(sapply(seq(1,h),function(x) regrp[[x]][,1]),1,which.max)
+	start=c()
+	for(x in 1:h){start=c(start,as.vector(regrp[[x]][,1]))}
 	for(i in 2:dim(regrp[[1]])[2]){
-  	      ind_max = apply(sapply(seq(1,h),function(x) regrp[[x]][,i]),1,which.max)
+  	      ind_max = c()
+	      for(x in 1:h){ind_max=c(ind_max,as.vector(regrp[[x]][,i]))}
   	      if(cor(start,ind_max)<cutoff){
 		keep=c(keep,i)
 		start=ind_max
