@@ -7,12 +7,8 @@ foundergeno.py - Creates a founder genotypes csv file from an inputed csv file
 ``` bash
 
 module load bcftools
-header='id,chr,pos,[...samples]
 
-echo $header > tmp.csv
-bcftools query -f '%ID,%CHROM,%POS[,%GT]\n' founder_genotypes.vcf.gz >> tmp.csv
-
-python foundergeno.py tmp.csv outfile.csv
+python foundergeno.py --help
 ```
 
 
