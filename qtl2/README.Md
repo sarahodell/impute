@@ -1,7 +1,6 @@
 Folder contains files for contructing input files for R/qtl2
 
-foundergeno.py - Creates a founder genotypes csv file from an inputed csv file
-	       - input csv file can be created via
+foundergeno.py - Creates a founder genotypes csv file from an input vcf file
 
 
 ``` bash
